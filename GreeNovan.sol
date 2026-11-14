@@ -87,16 +87,16 @@ contract GreenNova is IERC20 {
     _symbol = _Tsymbol;
     _decimals = _Tdecimals;
 
-    // Calculate total supply with 18 decimals
+   
     _totalSupply = _TtotalSupply * (10 ** _Tdecimals);
 
-    // Give all initial tokens to deployer
+    
     _balanceOf[msg.sender] = _totalSupply;
 
-    // Set admin
+   
     admin = msg.sender;
 
-    // Emit initial mint event
+    
     emit Transfer(address(0), msg.sender, _totalSupply);
 }
     
