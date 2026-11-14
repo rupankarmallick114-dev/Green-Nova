@@ -74,17 +74,31 @@ contract GreenNova is IERC20 {
     
     mapping(address => mapping(address => uint256)) public _allowance;
     
-    constructor(string memory _Tname, string memory _Tsymbol, uint256 _TtotalSupply, uint256 _Tdecimals) {
-        _name = _Tname;
-        _symbol = _Tsymbol;
-        _totalSupply = _TtotalSupply;
-        _decimals = _Tdecimals;
-        _balanceOf[msg.sender] = _TtotalSupply;
-        
-        admin = msg.sender;
-        
-        emit Transfer(address(0), msg.sender, _TtotalSupply);    // Minting amount from the network
-    }
+    constructor(
+    string memory _Tname,
+    string memory _Tsymbol,
+    uint256 _TtotalSupply,
+    uint256 _Tdecimals
+) {
+    require(_Tdecimals == 18, "Decimals must be 18");
+    require(_TtotalSupply > 0, "Supply must be greater than zero");
+
+    _name = _Tname;
+    _symbol = _Tsymbol;
+    _decimals = _Tdecimals;
+
+    // Calculate total supply with 18 decimals
+    _totalSupply = _TtotalSupply * (10 ** _Tdecimals);
+
+    // Give all initial tokens to deployer
+    _balanceOf[msg.sender] = _totalSupply;
+
+    // Set admin
+    admin = msg.sender;
+
+    // Emit initial mint event
+    emit Transfer(address(0), msg.sender, _totalSupply);
+}
     
     function name() public view returns (string memory) {
         return _name;
