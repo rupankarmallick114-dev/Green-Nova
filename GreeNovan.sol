@@ -65,7 +65,8 @@ contract GreenNova is IERC20 {
     
     string public _name;                    //'GreenNova Token';
     string public _symbol;                  //'fire';
-    uint256 public _totalSupply;            //100000
+    uint256 public _totalSupply;
+    uint256 public _maxSupply;            //100000
     uint256 public _decimals;               //18;
     
     address public admin;
@@ -74,7 +75,8 @@ contract GreenNova is IERC20 {
     
     mapping(address => mapping(address => uint256)) public _allowance;
     
-    constructor(
+   
+constructor(
     string memory _Tname,
     string memory _Tsymbol,
     uint256 _TtotalSupply,
@@ -82,21 +84,20 @@ contract GreenNova is IERC20 {
 ) {
     require(_Tdecimals == 18, "Decimals must be 18");
     require(_TtotalSupply > 0, "Supply must be greater than zero");
+    require(_maxSupply == 100000,"thta is total supply");
 
     _name = _Tname;
     _symbol = _Tsymbol;
     _decimals = _Tdecimals;
 
-   
-    _totalSupply = _TtotalSupply * (10 ** _Tdecimals);
+    _totalSupply = _TtotalSupply * (10 ** 18);
 
-    
+    _maxSupply = _totalSupply;
+
     _balanceOf[msg.sender] = _totalSupply;
 
-   
     admin = msg.sender;
 
-    
     emit Transfer(address(0), msg.sender, _totalSupply);
 }
     
@@ -176,7 +177,7 @@ contract GreenNova is IERC20 {
     
     function mint(address to, uint256 value) public {
         require(msg.sender == admin, "Only creator of the contract can mint tokens");
-        
+        require(to != address(0), "Invalid address");
         require(value > 0, "Invalid amount to mint");
         
         _totalSupply = _totalSupply.add(value);
@@ -185,20 +186,5 @@ contract GreenNova is IERC20 {
         emit Transfer(address(0), to, value);
     }
     
-    function burn(address to, uint256 value) public {
-        require(msg.sender == admin, "Only creator of the contract can burn tokens");
-        
-        require(value > 0, "Invalid amount to burn");
-        
-        require(_totalSupply > 0, "Total Supply should be greater than 0");
-        
-        require(value <= _totalSupply, "Value cannot be greater than total supply of tokens");
-        
-        require(_balanceOf[to] >= value, "Not enough balance to burn");
-        
-        _totalSupply = _totalSupply.sub(value);
-        _balanceOf[to] = _balanceOf[to].sub(value);
-        
-        emit Transfer(to, address(0), value);
-    }
+   
 }
