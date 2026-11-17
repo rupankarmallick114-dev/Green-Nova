@@ -1,105 +1,94 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
+interface IERC20 {
+    
+    function totalSupply() external view returns (uint256);
+
+    
+    function balanceOf(address account) external view returns (uint256);
+
+    
+    function transfer(address recipient, uint256 amount) external returns (bool);
+
+    
+    function allowance(address owner, address spender) external view returns (uint256);
+
+    
+    function approve(address spender, uint256 amount) external returns (bool);
+
+    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
+
+    
+    event Transfer(address indexed from, address indexed to, uint256 value);
+
+    
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+}
 
 library SafeMath {
-    
-    function add(uint a, uint b) internal pure returns (uint) {
-        uint256 c = a + b;
-        require(c >= a, "SafeMath: addition overflow");
-
-        return c;
+  function mul(uint256 a, uint256 b) internal pure returns (uint256 c) {
+    if (a == 0) {
+      return 0;
     }
+    c = a * b;
+    assert(c / a == b);
+    return c;
+  }
 
-    
-    function sub(uint a, uint b) internal pure returns (uint) {
-        require(b <= a, "SafeMath: subtraction overflow");
-        uint256 c = a - b;
+  function div(uint256 a, uint256 b) internal pure returns (uint256) {
+    return a / b;
+  }
 
-        return c;
-    }
+  function sub(uint256 a, uint256 b) internal pure returns (uint256) {
+    assert(b <= a);
+    return a - b;
+  }
 
-    
-    function mul(uint a, uint b) internal pure returns (uint) {
-        
-        if (a == 0) {
-            return 0;
-        }
-
-        uint256 c = a * b;
-        require(c / a == b, "SafeMath: multiplication overflow");
-
-        return c;
-    }
-
-    
-    function div(uint a, uint b) internal pure returns (uint) {   
-        
-        require(b > 0, "SafeMath: division by zero");
-        uint256 c = a / b;
-       
-
-        return c;
-    }
-}
-interface IERC20{
-  function totalSupply()external view returns(uint256);
-
-  function balanceOf(address account)external view returns(uint256);
-
-  function transfer(address recipient,uint amount)external returns(bool);
-
-  function allowance(address owner, address spender)external view returns(uint256);
-
-  function approve(address spender,uint amount)external returns(bool);
-
-  function transferFrom(address sender,address recipient,uint amount)external  returns(bool);
-
-  event Transfer(address indexed from, address indexed to, uint value);
-
-
-  event Approval(address indexed owner, address indexed spender, uint value);
-
+  function add(uint256 a, uint256 b) internal pure returns (uint256 c) {
+    c = a + b;
+    assert(c >= a);
+    return c;
+  }
 }
 contract GreenNova is IERC20 {
     using SafeMath for uint256;
     
-    string public _name;                    //'GreenNova Token';
-    string public _symbol;                  //'fire';
-    uint256 public _totalSupply;
-    uint256 public _maxSupply;            //100000
-    uint256 public _decimals;               //18;
+    string public _name;                    //'Green Nova  Token';
+    string public _symbol;
+    uint8 private _decimals;                //'GN';
+    uint256 private _totalSupply;
+    uint256 private _maxSupply;              //18;
     
     address public admin;
     
     mapping(address => uint256) public _balanceOf;
     
     mapping(address => mapping(address => uint256)) public _allowance;
-    
-   
+
 constructor(
     string memory _Tname,
     string memory _Tsymbol,
-    uint256 _TtotalSupply,
-    uint256 _Tdecimals
+    uint8 _Tdecimals,
+    uint256 _TmaxSupply,
+    uint256 _TtotalSupply
 ) {
     require(_Tdecimals == 18, "Decimals must be 18");
-    require(_TtotalSupply > 0, "Supply must be greater than zero");
-    require(_maxSupply == 100000,"thta is total supply");
+    require(_TtotalSupply == 100000, "Invalid total supply");
+    require(_TmaxSupply >= _TtotalSupply, "Max supply too low");
 
     _name = _Tname;
     _symbol = _Tsymbol;
     _decimals = _Tdecimals;
 
-    _totalSupply = _TtotalSupply * (10 ** 18);
-
+    _totalSupply = _TtotalSupply * (10 ** uint256(_Tdecimals));
     _maxSupply = _totalSupply;
 
     _balanceOf[msg.sender] = _totalSupply;
-
     admin = msg.sender;
 
     emit Transfer(address(0), msg.sender, _totalSupply);
 }
+
     
     function name() public view returns (string memory) {
         return _name;
@@ -177,7 +166,7 @@ constructor(
     
     function mint(address to, uint256 value) public {
         require(msg.sender == admin, "Only creator of the contract can mint tokens");
-        require(to != address(0), "Invalid address");
+        
         require(value > 0, "Invalid amount to mint");
         
         _totalSupply = _totalSupply.add(value);
@@ -186,5 +175,20 @@ constructor(
         emit Transfer(address(0), to, value);
     }
     
-   
+    function burn(address to, uint256 value) public {
+        require(msg.sender == admin, "Only creator of the contract can burn tokens");
+        
+        require(value > 0, "Invalid amount to burn");
+        
+        require(_totalSupply > 0, "Total Supply should be greater than 0");
+        
+        require(value <= _totalSupply, "Value cannot be greater than total supply of tokens");
+        
+        require(_balanceOf[to] >= value, "Not enough balance to burn");
+        
+        _totalSupply = _totalSupply.sub(value);
+        _balanceOf[to] = _balanceOf[to].sub(value);
+        
+        emit Transfer(to, address(0), value);
+    }
 }
